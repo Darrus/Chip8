@@ -1,0 +1,32 @@
+#pragma once
+
+// Graphics
+#define CHIP_8_SCREEN_WIDTH 64
+#define CHIP_8_SCREEN_HEIGHT 32
+
+// Memory
+#define CHIP_8_MEMORY_MAX 4096
+
+// Inputs
+#define CHIP_8_INPUT_MAX 16
+
+// Registers
+#define CHIP_8_REGISTER_V0 0
+#define CHIP_8_REGISTER_V1 1
+#define CHIP_8_REGISTER_V2 2
+#define CHIP_8_REGISTER_V3 3
+#define CHIP_8_REGISTER_V4 4
+#define CHIP_8_REGISTER_V5 5
+#define CHIP_8_REGISTER_V6 6
+#define CHIP_8_REGISTER_V7 7
+#define CHIP_8_REGISTER_V8 8
+#define CHIP_8_REGISTER_V9 9
+#define CHIP_8_REGISTER_VA 10
+#define CHIP_8_REGISTER_VB 11
+#define CHIP_8_REGISTER_VC 12
+#define CHIP_8_REGISTER_VD 13
+#define CHIP_8_REGISTER_VE 14
+#define CHIP_8_REGISTER_VF 15
+
+#define CHIP_8_REGISTER_MAX 16
+#define CHIP_8_STACK_MAX 16
