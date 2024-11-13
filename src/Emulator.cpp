@@ -64,70 +64,90 @@ namespace Core
             system.Registers.PC = opcode & 0x0FFF;
             break;
         case 0x3000:
-            unsigned short index = (opcode & 0x0F00) >> BIT_8;
-            if (system.Registers.V[index] == opcode & 0x00FF)
+        {
+            unsigned short x = (opcode & 0x0F00) >> BIT_8;
+            if (system.Registers.V[x] == opcode & 0x00FF)
             {
                 system.Registers.PC += 2;
             }
-            break;
+        }
+        break;
         case 0x4000:
-            unsigned short index = (opcode & 0x0F00) >> BIT_8;
-            if (system.Registers.V[index] != opcode & 0x00FF)
+        {
+            unsigned short x = (opcode & 0x0F00) >> BIT_8;
+            if (system.Registers.V[x] != opcode & 0x00FF)
             {
                 system.Registers.PC += 2;
             }
-            break;
+        }
+        break;
         case 0x5000:
-            unsigned short indexX = (opcode & 0x0F00) >> BIT_8;
-            unsigned short indexY = (opcode & 0x00F0) >> BIT_4;
-            if (system.Registers.V[indexX] == system.Registers.V[indexY])
+        {
+            unsigned short x = (opcode & 0x0F00) >> BIT_8;
+            unsigned short y = (opcode & 0x00F0) >> BIT_4;
+            if (system.Registers.V[x] == system.Registers.V[y])
             {
                 system.Registers.PC += 2;
             }
-            break;
+        }
+        break;
         case 0x6000:
-            unsigned short index = (opcode & 0x0F00) >> BIT_8;
-            system.Registers.V[index] = opcode & 0x00FF;
-            break;
+        {
+            unsigned short x = (opcode & 0x0F00) >> BIT_8;
+            system.Registers.V[x] = opcode & 0x00FF;
+        }
+        break;
         case 0x7000:
-            unsigned short index = (opcode & 0x0F00) >> BIT_8;
-            system.Registers.V[index] += opcode & 0x00FF;
-            break;
+        {
+            unsigned short x = (opcode & 0x0F00) >> BIT_8;
+            system.Registers.V[x] += opcode & 0x00FF;
+        }
+        break;
         case 0x8000:
-            unsigned short indexX = (opcode & 0x0F00) >> BIT_8;
-            unsigned short indexY = (opcode & 0x00F0) >> BIT_8;
+        {
+            unsigned short x = (opcode & 0x0F00) >> BIT_8;
+            unsigned short y = (opcode & 0x00F0) >> BIT_8;
 
             switch (opcode & 0x000F)
             {
             case 0x0000:
-                system.Registers.V[indexX] = system.Registers.V[indexY];
+                system.Registers.V[x] = system.Registers.V[y];
                 break;
             case 0x0001:
-                system.Registers.V[indexX] |= system.Registers.V[indexY];
+                system.Registers.V[x] |= system.Registers.V[y];
                 break;
             case 0x0002:
-                system.Registers.V[indexX] &= system.Registers.V[indexY];
+                system.Registers.V[x] &= system.Registers.V[y];
                 break;
             case 0x0003:
-                system.Registers.V[indexX] ^= system.Registers.V[indexY];
+                system.Registers.V[x] ^= system.Registers.V[y];
                 break;
             case 0x0004:
-                system.Registers.V[indexX] += system.Registers.V[indexY];
+                system.Registers.V[x] += system.Registers.V[y];
                 break;
             case 0x0005:
-                system.Registers.V[indexX] -= system.Registers.V[indexY];
+                system.Registers.V[x] -= system.Registers.V[y];
                 break;
             case 0x0006:
                 // system.Registers.V[indexX] = system.Registers.V[indexY];
                 break;
             case 0x0007:
-                system.Registers.V[indexX] = system.Registers.V[indexY] - system.Registers.V[indexX];
+                if (system.Registers.V[y] > system.Registers.V[x])
+                {
+                    system.Registers.V[0xF] = 1;
+                }
+                else
+                {
+                    system.Registers.V[0xF] = 0;
+                }
+                system.Registers.V[x] = system.Registers.V[y] - system.Registers.V[x];
                 break;
             case 0x000E:
                 // system.Registers.V[indexX] = system.Registers.V[indexY];
                 break;
             }
-            break;
+        }
+        break;
         case 0x9000:
             break;
         case 0xA000:
