@@ -4,7 +4,7 @@
 
 namespace Chip8System
 {
-    class Input
+    struct Input
     {
         unsigned char key[CHIP_8_INPUT_MAX];
     };

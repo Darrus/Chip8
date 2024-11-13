@@ -2,7 +2,7 @@
 
 namespace Chip8System
 {
-    class Timer
+    struct Timer
     {
         unsigned char DelayTimer;
         unsigned char SoundTimer;

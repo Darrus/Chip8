@@ -4,7 +4,7 @@
 
 namespace Chip8System
 {
-    class Register
+    struct Register
     {
         unsigned char V[CHIP_8_REGISTER_MAX];
         unsigned short I;  // Index register
