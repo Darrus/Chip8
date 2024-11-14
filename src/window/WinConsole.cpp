@@ -1,5 +1,6 @@
 #include <iostream>
 #include "WinConsole.h"
+#include "../system/SystemInfo.h"
 
 using std::cout;
 using std::endl;
@@ -34,11 +35,12 @@ namespace Core
         if (!this->isInitialized)
             throw "Console has not been initialized!";
 
-        for (unsigned short i = 0; i < this->height; ++i)
+        for (unsigned short y = 0; y < this->height; ++y)
         {
-            for (unsigned short j = 0; j < this->width; ++j)
+            for (unsigned short x = 0; x < this->width; ++x)
             {
-                cout << (char)ASCII_BLOCK;
+                if (pixels[(y * CHIP_8_SCREEN_WIDTH) + x])
+                    cout << (char)ASCII_BLOCK;
             }
             cout << endl;
         }

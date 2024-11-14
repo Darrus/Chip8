@@ -3,6 +3,7 @@
 // Graphics
 #define CHIP_8_SCREEN_WIDTH 64
 #define CHIP_8_SCREEN_HEIGHT 32
+#define CHIP_8_PIXEL_LENGTH 8
 
 // Memory
 #define CHIP_8_MEMORY_MAX 4096
