@@ -9,7 +9,8 @@ namespace Chip8System
 {
     struct Chip8
     {
-        unsigned char FontSet[80] = {
+        // Initialize memory with font set
+        unsigned char Memory[CHIP_8_MEMORY_MAX] = {
             0xF0, 0x90, 0x90, 0x90, 0xF0, // 0
             0x20, 0x60, 0x20, 0x20, 0x70, // 1
             0xF0, 0x10, 0xF0, 0x80, 0xF0, // 2
@@ -27,7 +28,6 @@ namespace Chip8System
             0xF0, 0x80, 0xF0, 0x80, 0xF0, // E
             0xF0, 0x80, 0xF0, 0x80, 0x80  // F
         };
-        unsigned char Memory[CHIP_8_MEMORY_MAX];
         unsigned short opcode;
 
         Graphic Graphic;

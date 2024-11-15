@@ -1,40 +1,93 @@
 #include <stdlib.h>
+#include <iostream>
+#include <fstream>
+#include <cmath>
+#include <chrono>
+
 #include "Emulator.h"
 #include "system/SystemInfo.h"
 
-#define KEYSTATE_DOWN 0x01       // 0000 0001
-#define KEYSTATE_RELEASED 0x8000 // 1000 0000 0000 0000
+#define VKEY_PRESSED 0x01 // 0000 0001
 
 #define BIT_4 4
 #define BIT_8 8
+
+using namespace std::chrono;
 
 namespace Core
 {
     Emulator::Emulator()
     {
         console.InitConsole(CHIP_8_SCREEN_WIDTH, CHIP_8_SCREEN_HEIGHT);
+        system.Registers.PC = CHIP_8_MEMORY_PROGRAM_START_ADDRESS;
+        LoadGame("./test_opcode.ch8");
+    }
+
+    void Emulator::LoadGame(const char *path)
+    {
+        console.Log("Loading game...");
+        // Open the file as a stream of binary and move the file pointer to the end
+        std::ifstream file(path, std::ios::binary | std::ios::ate);
+
+        if (file.is_open())
+        {
+            // Get size of file and allocate a buffer to hold the contents
+            std::streampos size = file.tellg();
+            char *buffer = new char[size];
+
+            // Go back to the beginning of the file and fill the buffer
+            file.seekg(0, std::ios::beg);
+            file.read(buffer, size);
+            file.close();
+
+            // Load the ROM contents into the Chip8's memory, starting at 0x200
+            for (long i = 0; i < size; ++i)
+            {
+                system.Memory[CHIP_8_MEMORY_PROGRAM_START_ADDRESS + i] = buffer[i];
+            }
+
+            // Free the buffer
+            delete[] buffer;
+        }
+        console.Log("Game loaded.");
     }
 
     void Emulator::EmulateCycle()
     {
-        system.opcode = system.Memory[system.Registers.PC] << BIT_8 | system.Memory[system.Registers.PC + 1];
+        console.Log("Emulating cycle...");
+        system.opcode = system.Memory[system.Registers.PC] << BIT_8;
+        system.opcode |= system.Memory[system.Registers.PC + 1];
         system.Registers.PC += 2;
 
+        console.Log("Opcode: %X", system.opcode);
         ExecuteOpcode(system.opcode);
         UpdateTimer();
+        console.Log("Cycle emulated.");
     }
 
     void Emulator::Run()
     {
+        const double FPS = 30;
+        const double TIME_TO_UPDATE = std::pow(10.0, 9.0) / FPS;
+        double dt = 0.0;
+        high_resolution_clock::time_point start = high_resolution_clock::now();
+
         while (true)
         {
-            EmulateCycle();
-            Render();
+            high_resolution_clock::time_point now = high_resolution_clock::now();
+            dt += duration_cast<nanoseconds>(now - start).count();
+            start = high_resolution_clock::now();
 
-            if ((GetAsyncKeyState(VK_ESCAPE) & KEYSTATE_DOWN) != 0)
+            if (dt > TIME_TO_UPDATE)
             {
-                break;
+                dt = 0.0;
+                EmulateCycle();
+                Render();
+                // std::system("pause");
             }
+
+            if (console.IsFocused() && (GetAsyncKeyState(VK_ESCAPE) & VKEY_PRESSED) != 0)
+                break;
         }
     }
 
@@ -57,12 +110,15 @@ namespace Core
                 system.Registers.PC = system.Registers.stack[system.Registers.SP];
                 break;
             default:
-                // Calls machine code routine
+                system.Registers.PC = opcode & 0x0FFF;
+                break;
             }
             break;
         case 0x1000:
-            system.Registers.PC = opcode * 0x0FFF;
+        {
+            system.Registers.PC = opcode & 0x0FFF;
             break;
+        }
         case 0x2000:
             system.Registers.stack[system.Registers.SP] = system.Registers.PC;
             ++system.Registers.SP; // Push to stack
@@ -111,7 +167,7 @@ namespace Core
         case 0x8000:
         {
             unsigned short x = (opcode & 0x0F00) >> BIT_8;
-            unsigned short y = (opcode & 0x00F0) >> BIT_8;
+            unsigned short y = (opcode & 0x00F0) >> BIT_4;
 
             switch (opcode & 0x000F)
             {
@@ -138,6 +194,7 @@ namespace Core
                 system.Registers.V[0xF] >>= 1;
                 break;
             case 0x0007:
+            {
                 if (system.Registers.V[y] > system.Registers.V[x])
                 {
                     system.Registers.V[0xF] = 1;
@@ -148,10 +205,13 @@ namespace Core
                 }
                 system.Registers.V[x] = system.Registers.V[y] - system.Registers.V[x];
                 break;
+            }
             case 0x000E:
-                system.Registers.V[0xF] = (opcode & 0x80) >> 7;
+            {
+                system.Registers.V[0xF] = system.Registers.V[x] >> 7;
                 system.Registers.V[x] <<= 1;
                 break;
+            }
             }
         }
         break;
@@ -174,14 +234,14 @@ namespace Core
             break;
         case 0xC000:
         {
-            unsigned short x = opcode & 0x0F00 >> BIT_8;
+            unsigned short x = (opcode & 0x0F00) >> BIT_8;
             system.Registers.V[x] = (rand() % 256) & (opcode & 0x00FF);
         }
         break;
         case 0xD000:
         {
-            unsigned short x = opcode & 0x0F00 >> BIT_8;
-            unsigned short y = opcode & 0x00F0 >> BIT_4;
+            unsigned char x = (opcode & 0x0F00) >> BIT_8;
+            unsigned char y = (opcode & 0x00F0) >> BIT_4;
 
             unsigned short xCoord = system.Registers.V[x];
             unsigned short yCoord = system.Registers.V[y];
@@ -191,13 +251,13 @@ namespace Core
             for (unsigned short row = 0; row < spriteHeight; ++row)
             {
                 // Convert x and y to 1 dimensional coordinate
-                unsigned short coord1D = x + ((y + row) * CHIP_8_SCREEN_WIDTH);
+                unsigned short coord1D = xCoord + ((yCoord + row) * CHIP_8_SCREEN_WIDTH);
                 unsigned short spriteRow = system.Memory[system.Registers.I + row];
 
-                for (unsigned short pixelX = 0; pixelX < coord1D; ++pixelX)
+                for (unsigned short pixelX = 0; pixelX < 8; ++pixelX)
                 {
                     // Pixel is active
-                    if (spriteRow & (0x80 >> pixelX) != 0)
+                    if ((spriteRow & (0x80 >> pixelX)) != 0)
                     {
                         // Graphic's Pixel is also active
                         if (system.Graphic.gfx[coord1D + pixelX] == 1)
@@ -215,19 +275,100 @@ namespace Core
             switch (opcode & 0x000F)
             {
             case 0x0001:
+            {
                 // Skips instruction if key in VX is not pressed
+                unsigned char x = (opcode & 0x0F00) >> BIT_8;
+                unsigned short key = system.Registers.V[x];
+                if (system.Input.key[key] != KEY_STATE::KEY_PRESSED)
+                {
+                    system.Registers.PC += 2;
+                }
                 break;
+            }
             case 0x000E:
-                // Skips instruction if key in FX is pressed
+            {
+                // Skips instruction if key in VX is not pressed
+                unsigned char x = (opcode & 0x0F00) >> BIT_8;
+                unsigned short key = system.Registers.V[x];
+                if (system.Input.key[key] == KEY_STATE::KEY_PRESSED)
+                {
+                    system.Registers.PC += 2;
+                }
                 break;
+            }
             }
             break;
         case 0xF000:
-            switch (opcode & 0x000F)
+        {
+            switch (opcode & 0x00F0)
             {
-            case 0x0003:
+            case 0x0000:
             {
-                unsigned short x = opcode & 0x0F00 >> BIT_8;
+                switch (opcode & 0x000F)
+                {
+                case 0x0007:
+                {
+                    unsigned short x = (opcode & 0x0F00) >> BIT_8;
+                    system.Registers.V[x] = system.Timer.DelayTimer;
+                    break;
+                }
+                case 0x000A:
+                {
+                    unsigned short x = (opcode & 0x0F00) >> BIT_8;
+                    bool isKeyPressed = false;
+                    for (unsigned short i = 0; i < CHIP_8_INPUT_MAX; ++i)
+                    {
+                        if (system.Input.key[i] == KEY_STATE::KEY_PRESSED)
+                        {
+                            system.Registers.V[x] = i;
+                            isKeyPressed = true;
+                        }
+                    }
+
+                    if (!isKeyPressed)
+                    {
+                        system.Registers.PC -= 2;
+                    }
+                    break;
+                }
+                }
+                break;
+            }
+            case 0x0010:
+            {
+                switch (opcode & 0x000F)
+                {
+                case 0x0005:
+                {
+                    unsigned short x = (opcode & 0x0F00) >> BIT_8;
+                    system.Timer.DelayTimer = system.Registers.V[x];
+                    break;
+                }
+                case 0x0008:
+                {
+                    unsigned short x = (opcode & 0x0F00) >> BIT_8;
+                    system.Timer.SoundTimer = system.Registers.V[x];
+                    break;
+                }
+                case 0x000E:
+                {
+                    unsigned short x = opcode & 0x0F00 >> BIT_8;
+                    system.Registers.I += system.Registers.V[x];
+                    break;
+                }
+                }
+                break;
+            }
+            case 0x0020:
+            {
+                unsigned short x = (opcode & 0x0F00) >> BIT_8;
+                unsigned short digit = system.Registers.V[x];
+                system.Registers.I = CHIP_8_MEMORY_FONT_ADDRESS + (digit * 5);
+                break;
+            }
+            case 0x0030:
+            {
+                unsigned short x = (opcode & 0x0F00) >> BIT_8;
                 unsigned short value = system.Registers.V[x];
 
                 system.Memory[system.Registers.I + 2] = value % 10;
@@ -239,76 +380,27 @@ namespace Core
                 system.Memory[system.Registers.I] = value % 10;
                 break;
             }
-            case 0x0005:
-                switch (opcode * 0x00F0)
-                {
-                case 0x0010:
-                {
-                    unsigned short x = opcode & 0x0F00 >> BIT_8;
-                    system.Timer.DelayTimer = system.Registers.V[x];
-                    break;
-                }
-                case 0x0050:
-                {
-                    unsigned short x = opcode & 0x0F00 >> BIT_8;
-                    for (unsigned short i = 0; i <= x; ++i)
-                    {
-                        system.Memory[system.Registers.I + i] = system.Registers.V[i];
-                    }
-                }
-                break;
-                case 0x0060:
-                {
-                    unsigned short x = opcode & 0x0F00 >> BIT_8;
-                    for (unsigned short i = 0; i <= x; ++i)
-                    {
-                        system.Registers.V[i] = system.Memory[system.Registers.I + i];
-                    }
-                    break;
-                }
-                }
-                break;
-            case 0x0007:
+            case 0x0050:
             {
-                unsigned short x = opcode & 0x0F00 >> BIT_8;
-                system.Registers.V[x] = system.Timer.DelayTimer;
-            }
-            break;
-            case 0x0008:
-            {
-                unsigned short x = opcode & 0x0F00 >> BIT_8;
-                system.Timer.SoundTimer = system.Registers.V[x];
+                unsigned short x = (opcode & 0x0F00) >> BIT_8;
+                for (unsigned short i = 0; i <= x; ++i)
+                {
+                    system.Memory[system.Registers.I + i] = system.Registers.V[i];
+                }
                 break;
             }
-            case 0x0009:
-                // Sets I to the location of sprite
-                break;
-            case 0x000A:
+            case 0x0060:
             {
-                unsigned short x = opcode & 0x0F00 >> BIT_8;
-                bool isKeyPressed = false;
-                for (unsigned short i = 0; i < CHIP_8_INPUT_MAX; ++i)
+                unsigned short x = (opcode & 0x0F00) >> BIT_8;
+                for (unsigned short i = 0; i <= x; ++i)
                 {
-                    if (system.Input.key[i] == KEY_STATE::KEY_PRESSED)
-                    {
-                        system.Registers.V[x] = i;
-                        isKeyPressed = true;
-                    }
+                    system.Registers.V[i] = system.Memory[system.Registers.I + i];
                 }
-
-                if (!isKeyPressed)
-                {
-                    system.Registers.PC -= 2;
-                }
-            }
-            case 0x000E:
-            {
-                unsigned short x = opcode & 0x0F00 >> BIT_8;
-                system.Registers.I += system.Registers.V[x];
                 break;
             }
             }
             break;
+        }
         }
     }
 
@@ -323,7 +415,7 @@ namespace Core
     void Emulator::UpdateKeyState(int key)
     {
         unsigned short state = GetAsyncKeyState(KeyTranslation[key]);
-        if ((state & 0x80) != 0)
+        if ((state & VKEY_PRESSED) != 0)
         {
             if (system.Input.key[key] < KEY_STATE::KEY_PRESSED)
             {
@@ -365,6 +457,8 @@ namespace Core
 
     void Emulator::Render()
     {
+        console.Log("Rendering...");
         console.Draw(system.Graphic.gfx);
+        console.Log("Rendered");
     }
 }

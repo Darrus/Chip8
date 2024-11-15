@@ -1,7 +1,7 @@
 #pragma once
 
-#include "WinConsole.h"
-#include "Chip8.h"
+#include "window/WinConsole.h"
+#include "system/Chip8.h"
 #include "KeyState.h"
 
 namespace Core
@@ -11,7 +11,7 @@ namespace Core
     public:
         Emulator();
 
-        void LoadGame(char *path);
+        void LoadGame(const char *path);
         void EmulateCycle();
         void Run();
 
@@ -22,7 +22,7 @@ namespace Core
         unsigned short KeyTranslation[CHIP_8_INPUT_MAX] = {
             1, 2, 3, 4,
             'Q', 'W', 'E', 'R',
-            'A', 'S', ' D', 'F',
+            'A', 'S', 'D', 'F',
             'Z', 'X', 'C', 'V'};
 
         void ExecuteOpcode(unsigned short opcode);
