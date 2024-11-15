@@ -20,7 +20,7 @@ namespace Core
         Chip8System::Chip8 system;
 
         unsigned short KeyTranslation[CHIP_8_INPUT_MAX] = {
-            1, 2, 3, 4,
+            '1', '2', '3', '4',
             'Q', 'W', 'E', 'R',
             'A', 'S', 'D', 'F',
             'Z', 'X', 'C', 'V'};

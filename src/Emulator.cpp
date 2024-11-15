@@ -7,7 +7,7 @@
 #include "Emulator.h"
 #include "system/SystemInfo.h"
 
-#define VKEY_PRESSED 0x01 // 0000 0001
+#define VKEY_PRESSED 0x1
 
 #define BIT_4 4
 #define BIT_8 8
@@ -20,7 +20,7 @@ namespace Core
     {
         console.InitConsole(CHIP_8_SCREEN_WIDTH, CHIP_8_SCREEN_HEIGHT);
         system.Registers.PC = CHIP_8_MEMORY_PROGRAM_START_ADDRESS;
-        LoadGame("./test_opcode.ch8");
+        LoadGame("../roms/space_invaders.ch8");
     }
 
     void Emulator::LoadGame(const char *path)
@@ -54,15 +54,15 @@ namespace Core
 
     void Emulator::EmulateCycle()
     {
-        console.Log("Emulating cycle...");
+        // console.Log("Emulating cycle...");
         system.opcode = system.Memory[system.Registers.PC] << BIT_8;
         system.opcode |= system.Memory[system.Registers.PC + 1];
         system.Registers.PC += 2;
 
-        console.Log("Opcode: %X", system.opcode);
+        // console.Log("Opcode: %X", system.opcode);
         ExecuteOpcode(system.opcode);
         UpdateTimer();
-        console.Log("Cycle emulated.");
+        // console.Log("Cycle emulated.");
     }
 
     void Emulator::Run()
@@ -81,6 +81,7 @@ namespace Core
             if (dt > TIME_TO_UPDATE)
             {
                 dt = 0.0;
+                PollInputs();
                 EmulateCycle();
                 Render();
                 // std::system("pause");
@@ -120,10 +121,12 @@ namespace Core
             break;
         }
         case 0x2000:
+        {
             system.Registers.stack[system.Registers.SP] = system.Registers.PC;
             ++system.Registers.SP; // Push to stack
             system.Registers.PC = opcode & 0x0FFF;
             break;
+        }
         case 0x3000:
         {
             unsigned short x = (opcode & 0x0F00) >> BIT_8;
@@ -172,30 +175,30 @@ namespace Core
             switch (opcode & 0x000F)
             {
             case 0x0000:
+            {
                 system.Registers.V[x] = system.Registers.V[y];
                 break;
+            }
             case 0x0001:
+            {
                 system.Registers.V[x] |= system.Registers.V[y];
                 break;
+            }
             case 0x0002:
+            {
                 system.Registers.V[x] &= system.Registers.V[y];
                 break;
+            }
             case 0x0003:
+            {
                 system.Registers.V[x] ^= system.Registers.V[y];
                 break;
+            }
             case 0x0004:
-                system.Registers.V[x] += system.Registers.V[y];
-                break;
-            case 0x0005:
-                system.Registers.V[x] -= system.Registers.V[y];
-                break;
-            case 0x0006:
-                system.Registers.V[0xF] = system.Registers.V[x] & 1;
-                system.Registers.V[0xF] >>= 1;
-                break;
-            case 0x0007:
             {
-                if (system.Registers.V[y] > system.Registers.V[x])
+                unsigned short sum = system.Registers.V[x] + system.Registers.V[y];
+                system.Registers.V[x] = sum & 0xFF;
+                if (sum > 0xFF)
                 {
                     system.Registers.V[0xF] = 1;
                 }
@@ -203,13 +206,50 @@ namespace Core
                 {
                     system.Registers.V[0xF] = 0;
                 }
-                system.Registers.V[x] = system.Registers.V[y] - system.Registers.V[x];
+                break;
+            }
+            case 0x0005:
+            {
+                unsigned char xValue = system.Registers.V[x];
+                unsigned char yValue = system.Registers.V[y];
+                system.Registers.V[x] = xValue - yValue;
+                if (xValue >= yValue)
+                {
+                    system.Registers.V[0xF] = 1;
+                }
+                else
+                {
+                    system.Registers.V[0xF] = 0;
+                }
+                break;
+            }
+            case 0x0006:
+            {
+                unsigned short xLSB = system.Registers.V[x] & 1;
+                system.Registers.V[x] >>= 1;
+                system.Registers.V[0xF] = xLSB;
+                break;
+            }
+            case 0x0007:
+            {
+                unsigned char xValue = system.Registers.V[x];
+                unsigned char yValue = system.Registers.V[y];
+                system.Registers.V[x] = yValue - xValue;
+                if (yValue >= xValue)
+                {
+                    system.Registers.V[0xF] = 1;
+                }
+                else
+                {
+                    system.Registers.V[0xF] = 0;
+                }
                 break;
             }
             case 0x000E:
             {
-                system.Registers.V[0xF] = system.Registers.V[x] >> 7;
+                unsigned char xMSB = system.Registers.V[x] >> 7;
                 system.Registers.V[x] <<= 1;
+                system.Registers.V[0xF] = xMSB;
                 break;
             }
             }
@@ -279,6 +319,8 @@ namespace Core
                 // Skips instruction if key in VX is not pressed
                 unsigned char x = (opcode & 0x0F00) >> BIT_8;
                 unsigned short key = system.Registers.V[x];
+                console.Log("Key: %d", key);
+                console.Log("Key State: %X", system.Input.key[key]);
                 if (system.Input.key[key] != KEY_STATE::KEY_PRESSED)
                 {
                     system.Registers.PC += 2;
@@ -290,6 +332,8 @@ namespace Core
                 // Skips instruction if key in VX is not pressed
                 unsigned char x = (opcode & 0x0F00) >> BIT_8;
                 unsigned short key = system.Registers.V[x];
+                console.Log("Key: %d", key);
+                console.Log("Key State: %X", system.Input.key[key]);
                 if (system.Input.key[key] == KEY_STATE::KEY_PRESSED)
                 {
                     system.Registers.PC += 2;
@@ -314,6 +358,7 @@ namespace Core
                 }
                 case 0x000A:
                 {
+                    console.Log("Waiting for key press...");
                     unsigned short x = (opcode & 0x0F00) >> BIT_8;
                     bool isKeyPressed = false;
                     for (unsigned short i = 0; i < CHIP_8_INPUT_MAX; ++i)
@@ -352,7 +397,7 @@ namespace Core
                 }
                 case 0x000E:
                 {
-                    unsigned short x = opcode & 0x0F00 >> BIT_8;
+                    unsigned short x = (opcode & 0x0F00) >> BIT_8;
                     system.Registers.I += system.Registers.V[x];
                     break;
                 }
@@ -457,8 +502,8 @@ namespace Core
 
     void Emulator::Render()
     {
-        console.Log("Rendering...");
+        // console.Log("Rendering...");
         console.Draw(system.Graphic.gfx);
-        console.Log("Rendered");
+        // console.Log("Rendered");
     }
 }

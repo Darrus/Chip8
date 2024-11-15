@@ -55,8 +55,8 @@ namespace Core
 
     void WinConsole::Log(const char *text)
     {
-        // SetCursorPosition(70, logCount++);
-        // cout << text;
+        SetCursorPosition(70, logCount++);
+        cout << text;
     }
 
     void WinConsole::Log(const char *formatText, unsigned short num)
