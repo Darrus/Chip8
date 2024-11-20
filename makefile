@@ -1,5 +1,5 @@
 OUTPUT_PATH= .\build
-OBJECTS= ${OUTPUT_PATH}\WinConsole.o ${OUTPUT_PATH}\Emulator.o ${OUTPUT_PATH}\Clock.o
+OBJECTS= ${OUTPUT_PATH}\WinConsole.o ${OUTPUT_PATH}\Emulator.o ${OUTPUT_PATH}\Clock.o ${OUTPUT_PATH}\Opcodes.o
 
 all:${OBJECTS} 
 	g++ .\src\main.cpp ${OBJECTS} -o ${OUTPUT_PATH}\Chip8.exe
@@ -12,6 +12,10 @@ ${OUTPUT_PATH}\WinConsole.o:src\window\WinConsole.cpp
 
 ${OUTPUT_PATH}\Clock.o:src\Clock.cpp
 	g++ .\src\Clock.cpp -c -o ${OUTPUT_PATH}\Clock.o
+
+${OUTPUT_PATH}\Opcodes.o:src\system\Opcodes.cpp
+	g++ .\src\system\Opcodes.cpp -c -o ${OUTPUT_PATH}\Opcodes.o
+
 
 clean:
 	@echo "Cleaning Chip8"

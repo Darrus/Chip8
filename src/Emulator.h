@@ -2,7 +2,6 @@
 
 #include "window/WinConsole.h"
 #include "system/Chip8.h"
-#include "KeyState.h"
 
 namespace Core
 {

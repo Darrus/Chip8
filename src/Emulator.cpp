@@ -4,13 +4,14 @@
 #include <cmath>
 
 #include "Emulator.h"
+#include "KeyState.h"
 #include "system/SystemInfo.h"
+#include "system/Opcodes.h"
 #include "Clock.h"
 
 #define VKEY_PRESSED 0x1
-
 #define FPS 15
-#define BIT_4 4
+
 #define BIT_8 8
 
 namespace Core
@@ -102,249 +103,99 @@ namespace Core
             switch (opcode & 0x0EEE)
             {
             case 0x00E0:
-                // Clear screen
-                for (int i = 0; i < CHIP_8_SCREEN_WIDTH * CHIP_8_SCREEN_HEIGHT; ++i)
-                {
-                    system.Graphic.gfx[i] = 0;
-                }
+                Chip8System::Opcodes::_00E0(system, opcode);
                 break;
             case 0x00EE:
-                --system.Registers.SP; // Pop the stack
-                system.Registers.PC = system.Registers.stack[system.Registers.SP];
+                Chip8System::Opcodes::_00EE(system, opcode);
                 break;
             default:
-                system.Registers.PC = opcode & 0x0FFF;
+                Chip8System::Opcodes::_0NNN(system, opcode);
                 break;
             }
             break;
         case 0x1000:
-        {
-            system.Registers.PC = opcode & 0x0FFF;
+            Chip8System::Opcodes::_1NNN(system, opcode);
             break;
-        }
         case 0x2000:
-        {
-            system.Registers.stack[system.Registers.SP] = system.Registers.PC;
-            ++system.Registers.SP; // Push to stack
-            system.Registers.PC = opcode & 0x0FFF;
+            Chip8System::Opcodes::_2NNN(system, opcode);
             break;
-        }
         case 0x3000:
-        {
-            uint16_t x = (opcode & 0x0F00) >> BIT_8;
-            if (system.Registers.V[x] == (opcode & 0x00FF))
-            {
-                system.Registers.PC += 2;
-            }
+            Chip8System::Opcodes::_3XNN(system, opcode);
             break;
-        }
         case 0x4000:
-        {
-            uint16_t x = (opcode & 0x0F00) >> BIT_8;
-            if (system.Registers.V[x] != (opcode & 0x00FF))
-            {
-                system.Registers.PC += 2;
-            }
+            Chip8System::Opcodes::_4XNN(system, opcode);
             break;
-        }
         case 0x5000:
-        {
-            uint16_t x = (opcode & 0x0F00) >> BIT_8;
-            uint16_t y = (opcode & 0x00F0) >> BIT_4;
-            if (system.Registers.V[x] == system.Registers.V[y])
-            {
-                system.Registers.PC += 2;
-            }
+            Chip8System::Opcodes::_5XY0(system, opcode);
             break;
-        }
         case 0x6000:
-        {
-            uint16_t x = (opcode & 0x0F00) >> BIT_8;
-            system.Registers.V[x] = opcode & 0x00FF;
+            Chip8System::Opcodes::_6XNN(system, opcode);
             break;
-        }
         case 0x7000:
-        {
-            uint16_t x = (opcode & 0x0F00) >> BIT_8;
-            system.Registers.V[x] += opcode & 0x00FF;
+            Chip8System::Opcodes::_7XNN(system, opcode);
             break;
-        }
         case 0x8000:
         {
-            uint16_t x = (opcode & 0x0F00) >> BIT_8;
-            uint16_t y = (opcode & 0x00F0) >> BIT_4;
-
             switch (opcode & 0x000F)
             {
             case 0x0000:
-            {
-                system.Registers.V[x] = system.Registers.V[y];
+                Chip8System::Opcodes::_8XY0(system, opcode);
                 break;
-            }
             case 0x0001:
-            {
-                system.Registers.V[x] |= system.Registers.V[y];
+                Chip8System::Opcodes::_8XY1(system, opcode);
                 break;
-            }
             case 0x0002:
-            {
-                system.Registers.V[x] &= system.Registers.V[y];
+                Chip8System::Opcodes::_8XY2(system, opcode);
                 break;
-            }
             case 0x0003:
-            {
-                system.Registers.V[x] ^= system.Registers.V[y];
+                Chip8System::Opcodes::_8XY3(system, opcode);
                 break;
-            }
             case 0x0004:
-            {
-                uint16_t sum = system.Registers.V[x] + system.Registers.V[y];
-                system.Registers.V[x] = sum & 0xFF;
-                if (sum > 0xFF)
-                {
-                    system.Registers.V[0xF] = 1;
-                }
-                else
-                {
-                    system.Registers.V[0xF] = 0;
-                }
+                Chip8System::Opcodes::_8XY4(system, opcode);
                 break;
-            }
             case 0x0005:
-            {
-                uint8_t xValue = system.Registers.V[x];
-                uint8_t yValue = system.Registers.V[y];
-                system.Registers.V[x] = xValue - yValue;
-                if (xValue >= yValue)
-                {
-                    system.Registers.V[0xF] = 1;
-                }
-                else
-                {
-                    system.Registers.V[0xF] = 0;
-                }
+                Chip8System::Opcodes::_8XY5(system, opcode);
                 break;
-            }
             case 0x0006:
-            {
-                uint16_t xLSB = system.Registers.V[x] & 1;
-                system.Registers.V[x] >>= 1;
-                system.Registers.V[0xF] = xLSB;
+                Chip8System::Opcodes::_8XY6(system, opcode);
                 break;
-            }
             case 0x0007:
-            {
-                uint8_t xValue = system.Registers.V[x];
-                uint8_t yValue = system.Registers.V[y];
-                system.Registers.V[x] = yValue - xValue;
-                if (yValue >= xValue)
-                {
-                    system.Registers.V[0xF] = 1;
-                }
-                else
-                {
-                    system.Registers.V[0xF] = 0;
-                }
+                Chip8System::Opcodes::_8XY7(system, opcode);
                 break;
-            }
             case 0x000E:
-            {
-                uint8_t xMSB = system.Registers.V[x] >> 7;
-                system.Registers.V[x] <<= 1;
-                system.Registers.V[0xF] = xMSB;
+                Chip8System::Opcodes::_8XYE(system, opcode);
                 break;
-            }
             }
         }
         break;
         case 0x9000:
-        {
-            uint16_t x = (opcode & 0x0F00) >> BIT_8;
-            uint16_t y = (opcode & 0x00F0) >> BIT_4;
-
-            if (system.Registers.V[x] != system.Registers.V[y])
-            {
-                system.Registers.PC += 2;
-            }
-        }
-        break;
+            Chip8System::Opcodes::_9XY0(system, opcode);
+            break;
         case 0xA000:
-            system.Registers.I = opcode & 0x0FFF;
+            Chip8System::Opcodes::_ANNN(system, opcode);
             break;
         case 0xB000:
-            system.Registers.PC = (opcode & 0x0FFF) + system.Registers.V[0];
+            Chip8System::Opcodes::_BNNN(system, opcode);
             break;
         case 0xC000:
-        {
-            uint16_t x = (opcode & 0x0F00) >> BIT_8;
-            system.Registers.V[x] = (rand() % 256) & (opcode & 0x00FF);
-        }
-        break;
-        case 0xD000:
-        {
-            uint8_t x = (opcode & 0x0F00) >> BIT_8;
-            uint8_t y = (opcode & 0x00F0) >> BIT_4;
-
-            uint16_t xCoord = system.Registers.V[x];
-            uint16_t yCoord = system.Registers.V[y];
-            uint16_t spriteHeight = opcode & 0xF;
-
-            system.Registers.V[0xF] = 0;
-            for (int row = 0; row < spriteHeight; ++row)
-            {
-                // Convert x and y to 1 dimensional coordinate
-                uint16_t coord1D = xCoord + ((yCoord + row) * CHIP_8_SCREEN_WIDTH);
-                uint16_t spriteRow = system.Memory[system.Registers.I + row];
-
-                for (int pixelX = 0; pixelX < 8; ++pixelX)
-                {
-                    // Pixel is active
-                    if ((spriteRow & (0x80 >> pixelX)) != 0)
-                    {
-                        // Graphic's Pixel is also active
-                        if (system.Graphic.gfx[coord1D + pixelX] == 1)
-                        {
-                            system.Registers.V[0xF] = 1;
-                        }
-
-                        system.Graphic.gfx[coord1D + pixelX] ^= 1;
-                    }
-                }
-            }
+            Chip8System::Opcodes::_CXNN(system, opcode);
             break;
-        }
+        case 0xD000:
+            Chip8System::Opcodes::_DXYN(system, opcode);
+            break;
         case 0xE000:
+        {
             switch (opcode & 0x000F)
             {
             case 0x000E:
-            {
-                // Skips instruction if key in VX is pressed
-                uint8_t x = (opcode & 0x0F00) >> BIT_8;
-                uint16_t key = system.Registers.V[x];
-                console.Log("Waiting for Key: %d", key);
-                console.Log("Key State: %d", system.Input.key[key]);
-                if (system.Input.key[key] == KEY_STATE::KEY_DOWN)
-                {
-                    console.Log("Key Read: %d", key);
-                    system.Registers.PC += 2;
-                }
+                Chip8System::Opcodes::_EX9E(system, opcode);
                 break;
-            }
             case 0x0001:
-            {
-                // Skips instruction if key in VX is not pressed
-                uint8_t x = (opcode & 0x0F00) >> BIT_8;
-                uint16_t key = system.Registers.V[x];
-                // console.Log("Key: %d", key);
-                // console.Log("Key State: %X", system.Input.key[key]);
-                if (system.Input.key[key] != KEY_STATE::KEY_DOWN)
-                {
-                    system.Registers.PC += 2;
-                }
+                Chip8System::Opcodes::_EXA1(system, opcode);
                 break;
-            }
             }
             break;
+        }
         case 0xF000:
         {
             switch (opcode & 0x00F0)
@@ -354,31 +205,11 @@ namespace Core
                 switch (opcode & 0x000F)
                 {
                 case 0x0007:
-                {
-                    uint16_t x = (opcode & 0x0F00) >> BIT_8;
-                    system.Registers.V[x] = system.Timer.DelayTimer;
+                    Chip8System::Opcodes::_FX07(system, opcode);
                     break;
-                }
                 case 0x000A:
-                {
-                    // console.Log("Waiting for key press...");
-                    uint16_t x = (opcode & 0x0F00) >> BIT_8;
-                    bool isKeyPressed = false;
-                    for (int i = 0; i < CHIP_8_INPUT_MAX; ++i)
-                    {
-                        if (system.Input.key[i] == KEY_STATE::KEY_DOWN)
-                        {
-                            system.Registers.V[x] = i;
-                            isKeyPressed = true;
-                        }
-                    }
-
-                    if (!isKeyPressed)
-                    {
-                        system.Registers.PC -= 2;
-                    }
+                    Chip8System::Opcodes::_FX0A(system, opcode);
                     break;
-                }
                 }
                 break;
             }
@@ -387,65 +218,29 @@ namespace Core
                 switch (opcode & 0x000F)
                 {
                 case 0x0005:
-                {
-                    uint16_t x = (opcode & 0x0F00) >> BIT_8;
-                    system.Timer.DelayTimer = system.Registers.V[x];
+                    Chip8System::Opcodes::_FX15(system, opcode);
                     break;
-                }
                 case 0x0008:
-                {
-                    uint16_t x = (opcode & 0x0F00) >> BIT_8;
-                    system.Timer.SoundTimer = system.Registers.V[x];
+                    Chip8System::Opcodes::_FX18(system, opcode);
                     break;
-                }
                 case 0x000E:
-                {
-                    uint16_t x = (opcode & 0x0F00) >> BIT_8;
-                    system.Registers.I += system.Registers.V[x];
+                    Chip8System::Opcodes::_FX1E(system, opcode);
                     break;
-                }
                 }
                 break;
             }
             case 0x0020:
-            {
-                uint16_t x = (opcode & 0x0F00) >> BIT_8;
-                uint16_t digit = system.Registers.V[x];
-                system.Registers.I = CHIP_8_MEMORY_FONT_ADDRESS + (digit * 5);
+                Chip8System::Opcodes::_FX29(system, opcode);
                 break;
-            }
             case 0x0030:
-            {
-                uint16_t x = (opcode & 0x0F00) >> BIT_8;
-                uint16_t value = system.Registers.V[x];
-
-                system.Memory[system.Registers.I + 2] = value % 10;
-                value /= 10;
-
-                system.Memory[system.Registers.I + 1] = value % 10;
-                value /= 10;
-
-                system.Memory[system.Registers.I] = value % 10;
+                Chip8System::Opcodes::_FX33(system, opcode);
                 break;
-            }
             case 0x0050:
-            {
-                uint16_t x = (opcode & 0x0F00) >> BIT_8;
-                for (int i = 0; i <= x; ++i)
-                {
-                    system.Memory[system.Registers.I + i] = system.Registers.V[i];
-                }
+                Chip8System::Opcodes::_FX55(system, opcode);
                 break;
-            }
             case 0x0060:
-            {
-                uint16_t x = (opcode & 0x0F00) >> BIT_8;
-                for (int i = 0; i <= x; ++i)
-                {
-                    system.Registers.V[i] = system.Memory[system.Registers.I + i];
-                }
+                Chip8System::Opcodes::_FX65(system, opcode);
                 break;
-            }
             }
             break;
         }

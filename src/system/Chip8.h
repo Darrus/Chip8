@@ -1,3 +1,5 @@
+#pragma once
+
 #include "Graphic.h"
 #include "Input.h"
 #include "Memory.h"
