@@ -2,6 +2,7 @@
 #include <iostream>
 #include <fstream>
 #include <cmath>
+#include <cstring>
 
 #include "Emulator.h"
 #include "KeyState.h"
@@ -20,12 +21,18 @@ namespace Core
     {
         console.InitConsole(CHIP_8_SCREEN_WIDTH, CHIP_8_SCREEN_HEIGHT);
         system.Registers.PC = CHIP_8_MEMORY_PROGRAM_START_ADDRESS;
-        LoadGame("../roms/space_invaders.ch8");
     }
 
-    void Emulator::LoadGame(const char *path)
+    bool Emulator::LoadGame(const char *path)
     {
         console.Log("Loading game...");
+
+        if (std::strlen(path) == 0)
+        {
+            console.Log("Path not provided.");
+            return false;
+        }
+
         // Open the file as a stream of binary and move the file pointer to the end
         std::ifstream file(path, std::ios::binary | std::ios::ate);
 
@@ -48,8 +55,12 @@ namespace Core
 
             // Free the buffer
             delete[] buffer;
+            console.Log("Game loaded.");
+            return true;
         }
-        console.Log("Game loaded.");
+
+        console.Log("Failed to load game.");
+        return false;
     }
 
     void Emulator::EmulateCycle()

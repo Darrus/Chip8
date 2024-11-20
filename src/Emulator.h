@@ -10,7 +10,7 @@ namespace Core
     public:
         Emulator();
 
-        void LoadGame(const char *path);
+        bool LoadGame(const char *path);
         void EmulateCycle();
         void Run();
 
