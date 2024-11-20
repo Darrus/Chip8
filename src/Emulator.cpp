@@ -75,6 +75,7 @@ namespace Core
 
         Clock cycleClock;
         cycleClock.Start();
+
         while (true)
         {
             if (console.IsFocused() && (GetAsyncKeyState(VK_ESCAPE) & VKEY_PRESSED) != 0)

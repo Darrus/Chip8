@@ -11,7 +11,7 @@ namespace Chip8System
 {
     struct Chip8
     {
-        // Initialize memory with font set
+        // Pre-initialize memory with font set
         uint8_t Memory[CHIP_8_MEMORY_MAX] = {
             0xF0, 0x90, 0x90, 0x90, 0xF0, // 0
             0x20, 0x60, 0x20, 0x20, 0x70, // 1
