@@ -1,6 +1,5 @@
 #include <iostream>
 #include "WinConsole.h"
-#include "../system/SystemInfo.h"
 
 #define ASCII_BLOCK 219
 
@@ -19,7 +18,7 @@ namespace Core
     {
     }
 
-    void WinConsole::InitConsole(unsigned short width, unsigned short height)
+    void WinConsole::InitConsole(uint16_t width, uint16_t height)
     {
         this->width = width;
         this->height = height;
@@ -31,20 +30,20 @@ namespace Core
     void WinConsole::SetCursorPosition(short x, short y)
     {
         COORD pos = {x, y};
-        SetConsoleCursorPosition(this->outputHandle, pos);
+        SetConsoleCursorPosition(outputHandle, pos);
     }
 
-    void WinConsole::Draw(unsigned char *pixels)
+    void WinConsole::Draw(uint8_t *pixels)
     {
-        if (!this->isInitialized)
+        if (!isInitialized)
             throw "Console has not been initialized!";
 
         SetCursorPosition(0, 0);
-        for (unsigned short y = 0; y < this->height; ++y)
+        for (uint16_t y = 0; y < height; ++y)
         {
-            for (unsigned short x = 0; x < this->width; ++x)
+            for (uint16_t x = 0; x < width; ++x)
             {
-                if (pixels[(y * CHIP_8_SCREEN_WIDTH) + x])
+                if (pixels[(y * width) + x])
                     cout << (char)ASCII_BLOCK;
                 else
                     cout << (char)32;
@@ -61,7 +60,7 @@ namespace Core
         cout << "                  ";
     }
 
-    void WinConsole::Log(const char *formatText, unsigned short num)
+    void WinConsole::Log(const char *formatText, uint16_t num)
     {
         char str[4000];
         sprintf(str, formatText, num);

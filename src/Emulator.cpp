@@ -94,7 +94,7 @@ namespace Core
         }
     }
 
-    void Emulator::ExecuteOpcode(unsigned short opcode)
+    void Emulator::ExecuteOpcode(uint16_t opcode)
     {
         switch (opcode & 0xF000)
         {
@@ -103,7 +103,7 @@ namespace Core
             {
             case 0x00E0:
                 // Clear screen
-                for (unsigned short i = 0; i < CHIP_8_SCREEN_WIDTH * CHIP_8_SCREEN_HEIGHT; ++i)
+                for (int i = 0; i < CHIP_8_SCREEN_WIDTH * CHIP_8_SCREEN_HEIGHT; ++i)
                 {
                     system.Graphic.gfx[i] = 0;
                 }
@@ -131,7 +131,7 @@ namespace Core
         }
         case 0x3000:
         {
-            unsigned short x = (opcode & 0x0F00) >> BIT_8;
+            uint16_t x = (opcode & 0x0F00) >> BIT_8;
             if (system.Registers.V[x] == (opcode & 0x00FF))
             {
                 system.Registers.PC += 2;
@@ -140,7 +140,7 @@ namespace Core
         }
         case 0x4000:
         {
-            unsigned short x = (opcode & 0x0F00) >> BIT_8;
+            uint16_t x = (opcode & 0x0F00) >> BIT_8;
             if (system.Registers.V[x] != (opcode & 0x00FF))
             {
                 system.Registers.PC += 2;
@@ -149,8 +149,8 @@ namespace Core
         }
         case 0x5000:
         {
-            unsigned short x = (opcode & 0x0F00) >> BIT_8;
-            unsigned short y = (opcode & 0x00F0) >> BIT_4;
+            uint16_t x = (opcode & 0x0F00) >> BIT_8;
+            uint16_t y = (opcode & 0x00F0) >> BIT_4;
             if (system.Registers.V[x] == system.Registers.V[y])
             {
                 system.Registers.PC += 2;
@@ -159,20 +159,20 @@ namespace Core
         }
         case 0x6000:
         {
-            unsigned short x = (opcode & 0x0F00) >> BIT_8;
+            uint16_t x = (opcode & 0x0F00) >> BIT_8;
             system.Registers.V[x] = opcode & 0x00FF;
             break;
         }
         case 0x7000:
         {
-            unsigned short x = (opcode & 0x0F00) >> BIT_8;
+            uint16_t x = (opcode & 0x0F00) >> BIT_8;
             system.Registers.V[x] += opcode & 0x00FF;
             break;
         }
         case 0x8000:
         {
-            unsigned short x = (opcode & 0x0F00) >> BIT_8;
-            unsigned short y = (opcode & 0x00F0) >> BIT_4;
+            uint16_t x = (opcode & 0x0F00) >> BIT_8;
+            uint16_t y = (opcode & 0x00F0) >> BIT_4;
 
             switch (opcode & 0x000F)
             {
@@ -198,7 +198,7 @@ namespace Core
             }
             case 0x0004:
             {
-                unsigned short sum = system.Registers.V[x] + system.Registers.V[y];
+                uint16_t sum = system.Registers.V[x] + system.Registers.V[y];
                 system.Registers.V[x] = sum & 0xFF;
                 if (sum > 0xFF)
                 {
@@ -212,8 +212,8 @@ namespace Core
             }
             case 0x0005:
             {
-                unsigned char xValue = system.Registers.V[x];
-                unsigned char yValue = system.Registers.V[y];
+                uint8_t xValue = system.Registers.V[x];
+                uint8_t yValue = system.Registers.V[y];
                 system.Registers.V[x] = xValue - yValue;
                 if (xValue >= yValue)
                 {
@@ -227,15 +227,15 @@ namespace Core
             }
             case 0x0006:
             {
-                unsigned short xLSB = system.Registers.V[x] & 1;
+                uint16_t xLSB = system.Registers.V[x] & 1;
                 system.Registers.V[x] >>= 1;
                 system.Registers.V[0xF] = xLSB;
                 break;
             }
             case 0x0007:
             {
-                unsigned char xValue = system.Registers.V[x];
-                unsigned char yValue = system.Registers.V[y];
+                uint8_t xValue = system.Registers.V[x];
+                uint8_t yValue = system.Registers.V[y];
                 system.Registers.V[x] = yValue - xValue;
                 if (yValue >= xValue)
                 {
@@ -249,7 +249,7 @@ namespace Core
             }
             case 0x000E:
             {
-                unsigned char xMSB = system.Registers.V[x] >> 7;
+                uint8_t xMSB = system.Registers.V[x] >> 7;
                 system.Registers.V[x] <<= 1;
                 system.Registers.V[0xF] = xMSB;
                 break;
@@ -259,8 +259,8 @@ namespace Core
         break;
         case 0x9000:
         {
-            unsigned short x = (opcode & 0x0F00) >> BIT_8;
-            unsigned short y = (opcode & 0x00F0) >> BIT_4;
+            uint16_t x = (opcode & 0x0F00) >> BIT_8;
+            uint16_t y = (opcode & 0x00F0) >> BIT_4;
 
             if (system.Registers.V[x] != system.Registers.V[y])
             {
@@ -276,27 +276,27 @@ namespace Core
             break;
         case 0xC000:
         {
-            unsigned short x = (opcode & 0x0F00) >> BIT_8;
+            uint16_t x = (opcode & 0x0F00) >> BIT_8;
             system.Registers.V[x] = (rand() % 256) & (opcode & 0x00FF);
         }
         break;
         case 0xD000:
         {
-            unsigned char x = (opcode & 0x0F00) >> BIT_8;
-            unsigned char y = (opcode & 0x00F0) >> BIT_4;
+            uint8_t x = (opcode & 0x0F00) >> BIT_8;
+            uint8_t y = (opcode & 0x00F0) >> BIT_4;
 
-            unsigned short xCoord = system.Registers.V[x];
-            unsigned short yCoord = system.Registers.V[y];
-            unsigned short spriteHeight = opcode & 0xF;
+            uint16_t xCoord = system.Registers.V[x];
+            uint16_t yCoord = system.Registers.V[y];
+            uint16_t spriteHeight = opcode & 0xF;
 
             system.Registers.V[0xF] = 0;
-            for (unsigned short row = 0; row < spriteHeight; ++row)
+            for (int row = 0; row < spriteHeight; ++row)
             {
                 // Convert x and y to 1 dimensional coordinate
-                unsigned short coord1D = xCoord + ((yCoord + row) * CHIP_8_SCREEN_WIDTH);
-                unsigned short spriteRow = system.Memory[system.Registers.I + row];
+                uint16_t coord1D = xCoord + ((yCoord + row) * CHIP_8_SCREEN_WIDTH);
+                uint16_t spriteRow = system.Memory[system.Registers.I + row];
 
-                for (unsigned short pixelX = 0; pixelX < 8; ++pixelX)
+                for (int pixelX = 0; pixelX < 8; ++pixelX)
                 {
                     // Pixel is active
                     if ((spriteRow & (0x80 >> pixelX)) != 0)
@@ -319,8 +319,8 @@ namespace Core
             case 0x000E:
             {
                 // Skips instruction if key in VX is pressed
-                unsigned char x = (opcode & 0x0F00) >> BIT_8;
-                unsigned short key = system.Registers.V[x];
+                uint8_t x = (opcode & 0x0F00) >> BIT_8;
+                uint16_t key = system.Registers.V[x];
                 console.Log("Waiting for Key: %d", key);
                 console.Log("Key State: %d", system.Input.key[key]);
                 if (system.Input.key[key] == KEY_STATE::KEY_DOWN)
@@ -333,8 +333,8 @@ namespace Core
             case 0x0001:
             {
                 // Skips instruction if key in VX is not pressed
-                unsigned char x = (opcode & 0x0F00) >> BIT_8;
-                unsigned short key = system.Registers.V[x];
+                uint8_t x = (opcode & 0x0F00) >> BIT_8;
+                uint16_t key = system.Registers.V[x];
                 // console.Log("Key: %d", key);
                 // console.Log("Key State: %X", system.Input.key[key]);
                 if (system.Input.key[key] != KEY_STATE::KEY_DOWN)
@@ -355,16 +355,16 @@ namespace Core
                 {
                 case 0x0007:
                 {
-                    unsigned short x = (opcode & 0x0F00) >> BIT_8;
+                    uint16_t x = (opcode & 0x0F00) >> BIT_8;
                     system.Registers.V[x] = system.Timer.DelayTimer;
                     break;
                 }
                 case 0x000A:
                 {
                     // console.Log("Waiting for key press...");
-                    unsigned short x = (opcode & 0x0F00) >> BIT_8;
+                    uint16_t x = (opcode & 0x0F00) >> BIT_8;
                     bool isKeyPressed = false;
-                    for (unsigned short i = 0; i < CHIP_8_INPUT_MAX; ++i)
+                    for (int i = 0; i < CHIP_8_INPUT_MAX; ++i)
                     {
                         if (system.Input.key[i] == KEY_STATE::KEY_DOWN)
                         {
@@ -388,19 +388,19 @@ namespace Core
                 {
                 case 0x0005:
                 {
-                    unsigned short x = (opcode & 0x0F00) >> BIT_8;
+                    uint16_t x = (opcode & 0x0F00) >> BIT_8;
                     system.Timer.DelayTimer = system.Registers.V[x];
                     break;
                 }
                 case 0x0008:
                 {
-                    unsigned short x = (opcode & 0x0F00) >> BIT_8;
+                    uint16_t x = (opcode & 0x0F00) >> BIT_8;
                     system.Timer.SoundTimer = system.Registers.V[x];
                     break;
                 }
                 case 0x000E:
                 {
-                    unsigned short x = (opcode & 0x0F00) >> BIT_8;
+                    uint16_t x = (opcode & 0x0F00) >> BIT_8;
                     system.Registers.I += system.Registers.V[x];
                     break;
                 }
@@ -409,15 +409,15 @@ namespace Core
             }
             case 0x0020:
             {
-                unsigned short x = (opcode & 0x0F00) >> BIT_8;
-                unsigned short digit = system.Registers.V[x];
+                uint16_t x = (opcode & 0x0F00) >> BIT_8;
+                uint16_t digit = system.Registers.V[x];
                 system.Registers.I = CHIP_8_MEMORY_FONT_ADDRESS + (digit * 5);
                 break;
             }
             case 0x0030:
             {
-                unsigned short x = (opcode & 0x0F00) >> BIT_8;
-                unsigned short value = system.Registers.V[x];
+                uint16_t x = (opcode & 0x0F00) >> BIT_8;
+                uint16_t value = system.Registers.V[x];
 
                 system.Memory[system.Registers.I + 2] = value % 10;
                 value /= 10;
@@ -430,8 +430,8 @@ namespace Core
             }
             case 0x0050:
             {
-                unsigned short x = (opcode & 0x0F00) >> BIT_8;
-                for (unsigned short i = 0; i <= x; ++i)
+                uint16_t x = (opcode & 0x0F00) >> BIT_8;
+                for (int i = 0; i <= x; ++i)
                 {
                     system.Memory[system.Registers.I + i] = system.Registers.V[i];
                 }
@@ -439,8 +439,8 @@ namespace Core
             }
             case 0x0060:
             {
-                unsigned short x = (opcode & 0x0F00) >> BIT_8;
-                for (unsigned short i = 0; i <= x; ++i)
+                uint16_t x = (opcode & 0x0F00) >> BIT_8;
+                for (int i = 0; i <= x; ++i)
                 {
                     system.Registers.V[i] = system.Memory[system.Registers.I + i];
                 }
@@ -454,7 +454,7 @@ namespace Core
 
     void Emulator::PollInputs()
     {
-        for (unsigned short i = 0; i < CHIP_8_INPUT_MAX; ++i)
+        for (int i = 0; i < CHIP_8_INPUT_MAX; ++i)
         {
             UpdateKeyState(i);
         }
@@ -462,7 +462,7 @@ namespace Core
 
     void Emulator::UpdateKeyState(int key)
     {
-        unsigned short state = GetAsyncKeyState(KeyTranslation[key]);
+        uint16_t state = GetAsyncKeyState(KeyTranslation[key]);
         if ((state & VKEY_PRESSED) != 0)
         {
             console.Log("Key Pressed: %d", key);

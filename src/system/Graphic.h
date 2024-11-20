@@ -6,8 +6,8 @@ namespace Chip8System
 {
     struct Graphic
     {
-        // Each unsigned char represents 1 bit
+        // Each uint8_t represents 1 bit
         // But in C++ the smallest allocatable size is 1 byte
-        unsigned char gfx[CHIP_8_SCREEN_WIDTH * CHIP_8_SCREEN_HEIGHT] = {0};
+        uint8_t gfx[CHIP_8_SCREEN_WIDTH * CHIP_8_SCREEN_HEIGHT] = {0};
     };
 }

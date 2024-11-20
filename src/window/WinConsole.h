@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstdint>
 #include <windows.h>
 
 namespace Core
@@ -7,25 +8,23 @@ namespace Core
     class WinConsole
     {
     public:
-        // HWND window;
-
         WinConsole();
         ~WinConsole();
 
-        void InitConsole(unsigned short width, unsigned short height);
+        void InitConsole(uint16_t width, uint16_t height);
         void SetCursorPosition(short x, short y);
-        void Draw(unsigned char *pixels);
+        void Draw(uint8_t *pixels);
 
         void Log(const char *text);
-        void Log(const char *formatText, unsigned short num);
+        void Log(const char *formatText, uint16_t num);
         // void Log(const char *formatText, double num);
         bool IsFocused();
 
     private:
         bool isInitialized = false;
         HANDLE outputHandle;
-        unsigned short width = 0;
-        unsigned short height = 0;
-        unsigned short logCount = 0;
+        uint16_t width = 0;
+        uint16_t height = 0;
+        uint16_t logCount = 0;
     };
 }

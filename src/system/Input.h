@@ -6,6 +6,6 @@ namespace Chip8System
 {
     struct Input
     {
-        unsigned char key[CHIP_8_INPUT_MAX];
+        uint8_t key[CHIP_8_INPUT_MAX];
     };
 }

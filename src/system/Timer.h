@@ -4,7 +4,7 @@ namespace Chip8System
 {
     struct Timer
     {
-        unsigned char DelayTimer;
-        unsigned char SoundTimer;
+        uint8_t DelayTimer;
+        uint8_t SoundTimer;
     };
 }
