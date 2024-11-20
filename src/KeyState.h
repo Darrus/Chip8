@@ -4,7 +4,6 @@ namespace Core
     {
         KEY_NONE,
         KEY_RELEASED,
-        KEY_PRESSED,
         KEY_DOWN
     };
 }

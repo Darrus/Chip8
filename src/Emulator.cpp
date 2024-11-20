@@ -2,17 +2,16 @@
 #include <iostream>
 #include <fstream>
 #include <cmath>
-#include <chrono>
 
 #include "Emulator.h"
 #include "system/SystemInfo.h"
+#include "Clock.h"
 
 #define VKEY_PRESSED 0x1
 
+#define FPS 15
 #define BIT_4 4
 #define BIT_8 8
-
-using namespace std::chrono;
 
 namespace Core
 {
@@ -67,28 +66,31 @@ namespace Core
 
     void Emulator::Run()
     {
-        const double FPS = 30;
-        const double TIME_TO_UPDATE = std::pow(10.0, 9.0) / FPS;
-        double dt = 0.0;
-        high_resolution_clock::time_point start = high_resolution_clock::now();
+        const double FRAME_UPDATE_TIME = 1000 / FPS;
+        const double CYCLE_UPDATE_TIME = 1000 / CHIP_8_CYCLE_SPEED;
 
+        Clock frameClock;
+        frameClock.Start();
+
+        Clock cycleClock;
+        cycleClock.Start();
         while (true)
         {
-            high_resolution_clock::time_point now = high_resolution_clock::now();
-            dt += duration_cast<nanoseconds>(now - start).count();
-            start = high_resolution_clock::now();
-
-            if (dt > TIME_TO_UPDATE)
-            {
-                dt = 0.0;
-                PollInputs();
-                EmulateCycle();
-                Render();
-                // std::system("pause");
-            }
-
             if (console.IsFocused() && (GetAsyncKeyState(VK_ESCAPE) & VKEY_PRESSED) != 0)
                 break;
+
+            if (cycleClock.Delta() >= CYCLE_UPDATE_TIME)
+            {
+                cycleClock.Start();
+                EmulateCycle();
+            }
+
+            if (frameClock.Delta() >= FRAME_UPDATE_TIME)
+            {
+                frameClock.Start();
+                PollInputs();
+                Render();
+            }
         }
     }
 
@@ -314,27 +316,28 @@ namespace Core
         case 0xE000:
             switch (opcode & 0x000F)
             {
+            case 0x000E:
+            {
+                // Skips instruction if key in VX is pressed
+                unsigned char x = (opcode & 0x0F00) >> BIT_8;
+                unsigned short key = system.Registers.V[x];
+                console.Log("Waiting for Key: %d", key);
+                console.Log("Key State: %d", system.Input.key[key]);
+                if (system.Input.key[key] == KEY_STATE::KEY_DOWN)
+                {
+                    console.Log("Key Read: %d", key);
+                    system.Registers.PC += 2;
+                }
+                break;
+            }
             case 0x0001:
             {
                 // Skips instruction if key in VX is not pressed
                 unsigned char x = (opcode & 0x0F00) >> BIT_8;
                 unsigned short key = system.Registers.V[x];
-                console.Log("Key: %d", key);
-                console.Log("Key State: %X", system.Input.key[key]);
-                if (system.Input.key[key] != KEY_STATE::KEY_PRESSED)
-                {
-                    system.Registers.PC += 2;
-                }
-                break;
-            }
-            case 0x000E:
-            {
-                // Skips instruction if key in VX is not pressed
-                unsigned char x = (opcode & 0x0F00) >> BIT_8;
-                unsigned short key = system.Registers.V[x];
-                console.Log("Key: %d", key);
-                console.Log("Key State: %X", system.Input.key[key]);
-                if (system.Input.key[key] == KEY_STATE::KEY_PRESSED)
+                // console.Log("Key: %d", key);
+                // console.Log("Key State: %X", system.Input.key[key]);
+                if (system.Input.key[key] != KEY_STATE::KEY_DOWN)
                 {
                     system.Registers.PC += 2;
                 }
@@ -358,12 +361,12 @@ namespace Core
                 }
                 case 0x000A:
                 {
-                    console.Log("Waiting for key press...");
+                    // console.Log("Waiting for key press...");
                     unsigned short x = (opcode & 0x0F00) >> BIT_8;
                     bool isKeyPressed = false;
                     for (unsigned short i = 0; i < CHIP_8_INPUT_MAX; ++i)
                     {
-                        if (system.Input.key[i] == KEY_STATE::KEY_PRESSED)
+                        if (system.Input.key[i] == KEY_STATE::KEY_DOWN)
                         {
                             system.Registers.V[x] = i;
                             isKeyPressed = true;
@@ -462,18 +465,12 @@ namespace Core
         unsigned short state = GetAsyncKeyState(KeyTranslation[key]);
         if ((state & VKEY_PRESSED) != 0)
         {
-            if (system.Input.key[key] < KEY_STATE::KEY_PRESSED)
-            {
-                system.Input.key[key] = KEY_STATE::KEY_PRESSED;
-            }
-            else
-            {
-                system.Input.key[key] = KEY_STATE::KEY_DOWN;
-            }
+            console.Log("Key Pressed: %d", key);
+            system.Input.key[key] = KEY_STATE::KEY_DOWN;
         }
         else
         {
-            if (system.Input.key[key] >= KEY_STATE::KEY_PRESSED)
+            if (system.Input.key[key] == KEY_STATE::KEY_DOWN)
             {
                 system.Input.key[key] = KEY_STATE::KEY_RELEASED;
             }

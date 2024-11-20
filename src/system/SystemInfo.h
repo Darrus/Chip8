@@ -1,5 +1,7 @@
 #pragma once
 
+#define CHIP_8_CYCLE_SPEED 500
+
 // Graphics
 #define CHIP_8_SCREEN_WIDTH 64
 #define CHIP_8_SCREEN_HEIGHT 32

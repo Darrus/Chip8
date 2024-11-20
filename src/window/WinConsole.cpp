@@ -55,8 +55,10 @@ namespace Core
 
     void WinConsole::Log(const char *text)
     {
-        SetCursorPosition(70, logCount++);
+        logCount = (logCount + 1) % 50;
+        SetCursorPosition(70, logCount);
         cout << text;
+        cout << "                  ";
     }
 
     void WinConsole::Log(const char *formatText, unsigned short num)
@@ -65,6 +67,13 @@ namespace Core
         sprintf(str, formatText, num);
         Log(str);
     }
+
+    // void WinConsole::Log(const char *formatText, double num)
+    // {
+    //     char str[4000];
+    //     sprintf(str, formatText, num);
+    //     Log(str);
+    // }
 
     bool WinConsole::IsFocused()
     {

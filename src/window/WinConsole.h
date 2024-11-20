@@ -18,6 +18,7 @@ namespace Core
 
         void Log(const char *text);
         void Log(const char *formatText, unsigned short num);
+        // void Log(const char *formatText, double num);
         bool IsFocused();
 
     private:
