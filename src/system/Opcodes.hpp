@@ -1,7 +1,7 @@
 #pragma once
 
 #include <cstdint>
-#include "Chip8.h"
+#include "Chip8.hpp"
 
 namespace Chip8System
 {

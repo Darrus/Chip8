@@ -1,5 +1,5 @@
 #include <iostream>
-#include "WinConsole.h"
+#include "WinConsole.hpp"
 
 #define ASCII_BLOCK 219
 

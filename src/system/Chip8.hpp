@@ -1,11 +1,10 @@
 #pragma once
 
-#include "Graphic.h"
-#include "Input.h"
-#include "Memory.h"
-#include "Register.h"
-#include "Timer.h"
-#include "SystemInfo.h"
+#include "Graphic.hpp"
+#include "Input.hpp"
+#include "Register.hpp"
+#include "Timer.hpp"
+#include "SystemInfo.hpp"
 
 namespace Chip8System
 {

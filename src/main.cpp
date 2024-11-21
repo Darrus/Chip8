@@ -1,26 +1,36 @@
 #include <iostream>
-#include "Emulator.h"
+#include <stdexcept>
+#include "Emulator.hpp"
 
 int main(int argc, char **argv)
 {
     Core::Emulator emulator;
-    bool gameLoaded = false;
 
-    if (argc > 1)
+    try
     {
-        const char *path = *(argv + 1); // +1 to get second argument in memory
-        gameLoaded = emulator.LoadGame(path);
+        bool gameLoaded = false;
+
+        if (argc > 1)
+        {
+            const char *path = *(argv + 1); // +1 to get second argument in memory
+            gameLoaded = emulator.LoadGame(path);
+        }
+        else
+        {
+            // Load default path game
+            gameLoaded = emulator.LoadGame("../roms/space_invaders.ch8");
+        }
+
+        if (gameLoaded)
+        {
+            emulator.Run();
+        }
     }
-    else
+    catch (const std::exception &e)
     {
-        // Load default path game
-        gameLoaded = emulator.LoadGame("../roms/space_invaders.ch8");
+        std::cerr << e.what() << '\n';
+        return EXIT_FAILURE;
     }
 
-    if (gameLoaded)
-    {
-        emulator.Run();
-    }
-
-    return 0;
+    return EXIT_SUCCESS;
 }

@@ -4,11 +4,11 @@
 #include <cmath>
 #include <cstring>
 
-#include "Emulator.h"
-#include "KeyState.h"
-#include "system/SystemInfo.h"
-#include "system/Opcodes.h"
-#include "Clock.h"
+#include "Emulator.hpp"
+#include "KeyState.hpp"
+#include "system/SystemInfo.hpp"
+#include "system/Opcodes.hpp"
+#include "Clock.hpp"
 
 #define VKEY_PRESSED 0x1
 #define FPS 15

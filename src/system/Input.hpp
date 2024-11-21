@@ -1,6 +1,6 @@
 #pragma once
 
-#include "SystemInfo.h"
+#include "SystemInfo.hpp"
 
 namespace Chip8System
 {

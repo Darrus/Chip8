@@ -1,8 +1,8 @@
 #include <random>
 
-#include "Opcodes.h"
-#include "../KeyState.h"
-#include "SystemInfo.h"
+#include "Opcodes.hpp"
+#include "../KeyState.hpp"
+#include "SystemInfo.hpp"
 
 #define BIT_4 4
 #define BIT_8 8

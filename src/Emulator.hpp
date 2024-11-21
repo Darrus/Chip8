@@ -1,7 +1,7 @@
 #pragma once
 
-#include "window/WinConsole.h"
-#include "system/Chip8.h"
+#include "window/WinConsole.hpp"
+#include "system/Chip8.hpp"
 
 namespace Core
 {
